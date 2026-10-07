@@ -44,8 +44,9 @@ class OllamaEmbeddingProvider extends EmbeddingProvider {
         body: JSON.stringify({ model: this.model, input, keep_alive: '30m' }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
+      const rawText = await res.text();
+      if (res.ok && rawText && rawText.trim()) {
+        const data = JSON.parse(rawText);
         // Returns { embeddings: [[...], [...]] }
         if (Array.isArray(data.embeddings)) return data.embeddings;
       }
@@ -62,12 +63,15 @@ class OllamaEmbeddingProvider extends EmbeddingProvider {
       body: JSON.stringify({ model: this.model, prompt, keep_alive: '30m' }),
     });
 
+    const rawText = await res.text();
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Ollama embed error ${res.status}: ${text}`);
+      throw new Error(`Ollama embed error ${res.status}: ${rawText}`);
+    }
+    if (!rawText || !rawText.trim()) {
+      throw new Error('Ollama embed returned an empty response body.');
     }
 
-    const data = await res.json();
+    const data = JSON.parse(rawText);
     // Returns { embedding: [...] }
     return [data.embedding];
   }

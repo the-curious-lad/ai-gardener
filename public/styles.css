@@ -655,3 +655,27 @@ body {
   opacity: 0;
   transform: translate(-50%, 8px);
 }
+
+.retry-action-row {
+  margin-top: 0.55rem;
+  display: flex;
+  align-items: center;
+}
+
+.btn-retry-msg {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-retry-msg:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+

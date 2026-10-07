@@ -14,33 +14,86 @@ class OllamaProvider extends AIProvider {
     this.model   = config.ollama.model;
   }
 
-  // ── Internal: POST to Ollama /api/chat ──────────────────────────────────────
+  // ── Internal: POST to Ollama /api/chat (streamed keep-alive + safe JSON parse) ──
 
   async _chat(messages, options = {}) {
     const body = {
       model:      this.model,
       messages,
-      stream:     false,
+      stream:     true,
       keep_alive: '30m',
       ...options,
     };
 
-    const res = await fetch(`${this.baseUrl}/api/chat`, {
-      method:  'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
-      },
-      body: JSON.stringify(body),
-    });
+    let lastFetchErr = null;
+    for (let netAttempt = 1; netAttempt <= 2; netAttempt++) {
+      try {
+        const res = await fetch(`${this.baseUrl}/api/chat`, {
+          method:  'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true',
+          },
+          body: JSON.stringify(body),
+        });
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Ollama API error ${res.status}: ${text}`);
+        const rawText = await res.text();
+        if (!res.ok) {
+          throw new Error(`Ollama API error ${res.status}: ${rawText || res.statusText}`);
+        }
+
+        const trimmed = (rawText || '').trim();
+        if (!trimmed) {
+          throw new Error('Ollama returned an empty response body over tunnel.');
+        }
+
+        // 1. Try single JSON object first (in case stream:false was passed in options)
+        try {
+          const single = JSON.parse(trimmed);
+          if (single && typeof single === 'object' && ! trimmed.includes('\n{')) {
+            return single?.message?.content ?? single?.response ?? '';
+          }
+        } catch (_) {
+          // Proceed to NDJSON stream accumulation
+        }
+
+        // 2. Accumulate NDJSON lines from stream:true
+        const lines = trimmed.split(/\r?\n/).filter((l) => l.trim());
+        let combinedContent = '';
+        let parsedAnyChunk = false;
+        for (const line of lines) {
+          try {
+            const chunk = JSON.parse(line);
+            parsedAnyChunk = true;
+            if (chunk?.error) {
+              throw new Error(`Ollama stream error: ${chunk.error}`);
+            }
+            if (typeof chunk?.message?.content === 'string') {
+              combinedContent += chunk.message.content;
+            } else if (typeof chunk?.response === 'string') {
+              combinedContent += chunk.response;
+            }
+          } catch (chunkErr) {
+            if (chunkErr.message.startsWith('Ollama stream error:')) throw chunkErr;
+            // Ignore a truncated trailing NDJSON metadata line if content was already collected
+          }
+        }
+
+        if (!parsedAnyChunk) {
+          throw new Error('Failed to parse JSON response from Ollama.');
+        }
+
+        return combinedContent;
+      } catch (err) {
+        lastFetchErr = err;
+        logger.warn(`[Ollama._chat] network/parse attempt ${netAttempt}/2 failed: ${err.message}`);
+        if (netAttempt < 2) {
+          await new Promise((r) => setTimeout(r, 800));
+        }
+      }
     }
 
-    const data = await res.json();
-    return data?.message?.content ?? '';
+    throw lastFetchErr;
   }
 
   // ── generateText ─────────────────────────────────────────────────────────────

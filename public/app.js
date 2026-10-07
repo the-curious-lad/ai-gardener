@@ -169,12 +169,64 @@ function getEffectiveTasks(sessionId) {
   );
 }
 
-function appendChatBubble(role, text) {
+async function safeReadJson(res) {
+  const rawText = await res.text();
+  if (!rawText || !rawText.trim()) {
+    throw new Error(
+      `The connection timed out or closed before the AI finished responding (HTTP ${res.status}). Please click Retry below to resend.`
+    );
+  }
+  try {
+    return JSON.parse(rawText);
+  } catch (_) {
+    throw new Error(
+      `Received an incomplete JSON response from the server (HTTP ${res.status}). Please click Retry below to resend.`
+    );
+  }
+}
+
+function appendChatBubble(role, text, retryPayload = null, msgIndex = -1, sessionId = null) {
   const wrap = document.createElement('div');
   wrap.className = `msg ${role}`;
   const bubble = document.createElement('div');
   bubble.className = 'bubble';
-  bubble.textContent = text;
+
+  const textSpan = document.createElement('div');
+  textSpan.textContent = text;
+  bubble.appendChild(textSpan);
+
+  if (retryPayload) {
+    const retryRow = document.createElement('div');
+    retryRow.className = 'retry-action-row';
+    const retryBtn = document.createElement('button');
+    retryBtn.type = 'button';
+    retryBtn.className = 'btn-retry-msg';
+    retryBtn.textContent = '🔄 Retry Sending';
+    retryBtn.onclick = () => {
+      if (activeInFlight) {
+        showWaitNotice(retryBtn);
+        return;
+      }
+      const targetSid = retryPayload.sessionId || sessionId || currentSessionId;
+      const entry = getGardenEntry(targetSid);
+      const hist = entry.session?.conversationHistory || [];
+      // Remove the error bubble and the preceding optimistic user bubble before retrying
+      if (msgIndex >= 0 && msgIndex < hist.length) {
+        hist.splice(msgIndex, 1);
+        if (msgIndex - 1 >= 0 && hist[msgIndex - 1]?.role === 'user') {
+          hist.splice(msgIndex - 1, 1);
+        }
+      }
+      if (retryPayload.type === 'chat' && retryPayload.text) {
+        sendChatMessage(retryPayload.text, null, targetSid);
+      } else if (retryPayload.type === 'task' && retryPayload.taskId) {
+        markTaskDone(targetSid, retryPayload.taskId, Boolean(retryPayload.triggerReplan));
+      }
+    };
+    retryRow.appendChild(retryBtn);
+    bubble.appendChild(retryRow);
+  }
+
   wrap.appendChild(bubble);
   chatMessages.appendChild(wrap);
   chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -224,9 +276,15 @@ function renderChatForActiveGarden() {
       'Welcome! Tell me what you would like to grow and where your garden is located — or upload a photo of a plant you are observing.'
     );
   } else {
-    for (const msg of history) {
-      appendChatBubble(msg.role === 'user' ? 'user' : 'assistant', msg.content);
-    }
+    history.forEach((msg, i) => {
+      appendChatBubble(
+        msg.role === 'user' ? 'user' : 'assistant',
+        msg.content,
+        msg.retryPayload || null,
+        i,
+        activeId
+      );
+    });
   }
 
   if (entry.lastInspector) {
@@ -632,7 +690,7 @@ if (authForm) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (!res.ok) {
         throw new Error(data.error || 'Authentication failed.');
       }
@@ -694,7 +752,7 @@ async function createBackendSessionForDraft() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId }),
   });
-  const data = await res.json();
+  const data = await safeReadJson(res);
   if (!res.ok || data.limitReached || !data.sessionId) {
     return null;
   }
@@ -718,7 +776,7 @@ async function ensureSessionsLoaded() {
     if (!res.ok) {
       throw new Error('Unauthorized');
     }
-    const data = await res.json();
+    const data = await safeReadJson(res);
     await applyAuthenticatedPayload(data.user, data.sessions || []);
   } catch (_) {
     authToken = null;
@@ -784,7 +842,7 @@ function markTaskDone(targetSessionId, taskId, triggerReplan = false) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId: targetSessionId, triggerReplan }),
       });
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (!res.ok) throw new Error(data.error || 'Failed to complete task');
 
       if (data.replanned) {
@@ -816,7 +874,17 @@ function markTaskDone(targetSessionId, taskId, triggerReplan = false) {
       activeInFlight = null;
       entry.session.conversationHistory = [
         ...(entry.session.conversationHistory || []),
-        { role: 'assistant', content: `Error: ${err.message}`, timestamp: new Date().toISOString() },
+        {
+          role: 'assistant',
+          content: `Error: ${err.message}`,
+          timestamp: new Date().toISOString(),
+          retryPayload: {
+            type: 'task',
+            sessionId: targetSessionId,
+            taskId,
+            triggerReplan,
+          },
+        },
       ];
       renderAll();
     }
@@ -848,17 +916,17 @@ if (sidebarNewGardenBtn) {
   });
 }
 
-chatForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
+async function sendChatMessage(text, file = null, targetSessionOverride = null) {
   if (activeInFlight) {
     showWaitNotice(sendBtn);
     return;
   }
 
-  const text = messageInput.value.trim();
-  const file = photoInput.files[0];
-
   if (!text && !file) return;
+
+  if (targetSessionOverride && sessionIds.includes(targetSessionOverride)) {
+    currentSessionId = targetSessionOverride;
+  }
 
   const isOnNewDraft =
     !currentSessionId ||
@@ -939,7 +1007,7 @@ chatForm.addEventListener('submit', async (e) => {
         method: 'POST',
         body: formData,
       });
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (!res.ok) throw new Error(data.error || 'Photo upload failed');
 
       const replyText = data.recommendation || 'Photo analyzed and tasks updated.';
@@ -967,7 +1035,7 @@ chatForm.addEventListener('submit', async (e) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text }),
       });
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (!res.ok) throw new Error(data.error || 'Message failed');
 
       entry.session.conversationHistory = [
@@ -986,12 +1054,37 @@ chatForm.addEventListener('submit', async (e) => {
   } catch (err) {
     entry.session.conversationHistory = [
       ...(entry.session.conversationHistory || []),
-      { role: 'assistant', content: `Error: ${err.message}`, timestamp: new Date().toISOString() },
+      {
+        role: 'assistant',
+        content: `Error: ${err.message}`,
+        timestamp: new Date().toISOString(),
+        retryPayload: text
+          ? {
+              type: 'chat',
+              sessionId: activeId,
+              text,
+            }
+          : null,
+      },
     ];
   } finally {
     activeInFlight = null;
     renderAll();
   }
+}
+
+chatForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (activeInFlight) {
+    showWaitNotice(sendBtn);
+    return;
+  }
+
+  const text = messageInput.value.trim();
+  const file = photoInput.files[0];
+
+  if (!text && !file) return;
+  await sendChatMessage(text, file, null);
 });
 
 ensureSessionsLoaded().catch(() => {});

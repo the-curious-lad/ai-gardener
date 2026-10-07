@@ -7,9 +7,12 @@ const app = require('./app');
 async function start() {
   await connectDB();
 
-  app.listen(config.port, () => {
+  const server = app.listen(config.port, () => {
     console.log(`[Server] AI Gardener running on http://localhost:${config.port}`);
   });
+  // Prevent Node from closing connections before Render's load balancer during multi-step LLM turns
+  server.keepAliveTimeout = 120000;
+  server.headersTimeout = 125000;
 }
 
 start().catch((err) => {
