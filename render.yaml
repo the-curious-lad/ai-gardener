@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: ai-gardener
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_APP_DB
+        value: garden_app
+      - key: MONGODB_KNOWLEDGE_DB
+        value: gardening_knowledge
+      - key: OLLAMA_BASE_URL
+        sync: false
+      - key: OLLAMA_MODEL
+        value: gemma3:4b
+      - key: EMBEDDING_MODEL
+        value: nomic-embed-text
+      - key: EMBEDDING_DIMENSIONS
+        value: 768

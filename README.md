@@ -35,7 +35,7 @@ You spend 30 seconds telling it about your garden. It gives you one clear task f
 | Category | How We Qualify |
 |---|---|
 | 🏆 **Overall** | Genuinely useful open-source project with real-world impact |
-| 🍃 **MongoDB Atlas** | Dual-database design + two Atlas Vector Search indexes for semantic plant & disease retrieval |
+| 🍃 **MongoDB Atlas** | Dual-database design + unified `plant_health_knowledge` collection with a single Atlas Vector Search index; `knowledge_type` filters replace separate collections |
 | 🤖 **Gemma** | Gemma 3 4B (via Ollama) used for both text reasoning and multimodal photo analysis |
 | ☁️ **Render** | Single-click deploy via `render.yaml`; no cloud AI APIs required |
 
@@ -50,7 +50,7 @@ You tell it about your garden
         ↓
 AI asks only what it needs to know
         ↓
-Retrieves planting knowledge (Vector Search)
+Retrieves relevant plant knowledge (Vector Search)
         ↓
 Builds your personalised X-day plan
         ↓
@@ -60,7 +60,7 @@ You snap a photo of your plant
         ↓
 Gemma 3 analyses the image → structured observation
         ↓
-AI searches disease knowledge (second Vector Search)
+AI searches plant_health_knowledge (DISEASE · PEST · NUTRIENT_DEFICIENCY types)
         ↓
 Planner updates your garden state & next tasks
         ↓
@@ -86,22 +86,32 @@ Repeat
         │  Reader  │   │  Executor  │
         │(Gemma 3) │   └────┬───────┘
         └────┬─────┘        │
-             │         ┌────▼──────────────────┐
-        Observation    │   MongoDB Atlas        │
-             │         │  ┌─────────────────┐  │
-             └────────►│  │ Vector Search   │  │
-                        │  │  Plant (Path A) │  │
-                        │  │  Disease(Path B)│  │
-                        │  └─────────────────┘  │
-                        │  garden_sessions       │
-                        │  plant_knowledge       │
-                        │  disease_knowledge     │
-                        └───────────────────────┘
+             │         ┌────▼──────────────────────────┐
+        Observation    │   MongoDB Atlas                │
+             │         │  ┌──────────────────────────┐ │
+             └────────►│  │  Vector Search           │ │
+                        │  │  plant_health_knowledge  │ │
+                        │  │  (knowledge_type filter) │ │
+                        │  └──────────────────────────┘ │
+                        │  garden_sessions               │
+                        └───────────────────────────────┘
 ```
+
+### Knowledge Types
+
+One collection. One index. The Query Rewriter selects which `knowledge_type` values to retrieve:
+
+| Query | `knowledge_type` filters used |
+|---|---|
+| "How should I grow tomatoes?" | `PLANT_BASIC, PLANTING, SOIL, WATER, SUNLIGHT, CLIMATE` |
+| Photo of yellowing leaves | `DISEASE, PEST, NUTRIENT_DEFICIENCY, ENVIRONMENTAL_STRESS, HEALTHY_BASELINE` |
+| "What should I do today?" | `MAINTENANCE, GROWTH_STAGE, PREVENTION` |
+| "Does my plant look healthy?" | `HEALTHY_BASELINE, GROWTH_STAGE` |
 
 ### Key Design Principles
 
 - **One backend, no microservices.** All logical components are clean internal modules.
+- **One knowledge collection.** `plant_health_knowledge` covers everything — planting, disease, nutrition, maintenance — categorised by `knowledge_type`, not split into separate tables.
 - **Vision is observational only.** A photo never directly mutates the database. It produces an observation → Planner evaluates → state updates.
 - **Minimum sufficient context.** The Query Rewriter collects only what it needs, never re-asks what it knows.
 - **Modular AI layer.** Swap Gemma 3 / Ollama for any other model without touching application logic.
@@ -114,12 +124,12 @@ Repeat
 ```
 ai-gardener/
 ├── data/
-│   ├── seed_plants.json         # Plant knowledge base
-│   └── seed_diseases.json       # Disease knowledge base
+│   ├── plant_health_knowledge.csv     # 2,175 extension-verified records across 17 knowledge_types
+│   └── plant_health_source_audit.csv  # 2,470 source verification & citation audit records
 ├── scripts/
-│   ├── seed.js                  # Ingest knowledge + generate embeddings
+│   ├── seed.js                  # Ingest CSV knowledge + generate embeddings
 │   ├── demo-path-1.js           # Demo: clarification → plan
-│   └── demo-path-2.js           # Demo: photo → disease → replan
+│   └── demo-path-2.js           # Demo: photo → knowledge search → replan
 ├── public/                      # Minimal frontend (Vanilla JS)
 │   ├── index.html
 │   ├── styles.css
@@ -132,7 +142,7 @@ ai-gardener/
     ├── services/
     │   ├── ai/                  # AIProvider → OllamaProvider (Gemma 3)
     │   ├── embeddings/          # EmbeddingProvider → OllamaEmbeddingProvider
-    │   ├── vectorSearch/        # Plant (Path A) + Disease (Path B) search
+    │   ├── vectorSearch/        # knowledgeVectorSearch (knowledge_type filtered)
     │   ├── context/             # Query Rewriter & clarification loop
     │   ├── photo/               # Photo Reader (Gemma 3 multimodal)
     │   ├── planner/             # Phase-aware Planner
@@ -141,6 +151,7 @@ ai-gardener/
     ├── routes/
     └── utils/
 ```
+
 
 ---
 
@@ -182,7 +193,7 @@ ollama list
 1. Create a free cluster at [mongodb.com/atlas](https://www.mongodb.com/atlas).
 2. Create two databases: `garden_app` and `gardening_knowledge`.
 3. Copy your connection string.
-4. Create **two Vector Search indexes** (see below).
+4. Create **one Vector Search index** on `plant_health_knowledge` (see below).
 
 ### 4 · Configure Environment
 
@@ -208,7 +219,7 @@ PORT=3000
 node scripts/seed.js
 ```
 
-This ingests plant and disease knowledge into MongoDB, generates embeddings via Ollama, and prepares Vector Search documents.
+This ingests all plant health knowledge (plant basics, diseases, pests, nutrition, etc.) from `data/seed_knowledge.json` into MongoDB, generates embeddings via Ollama, and prepares the Vector Search documents.
 
 ### 6 · Start the Server
 
@@ -221,12 +232,10 @@ npm start
 
 ## 🔍 MongoDB Atlas Vector Search Setup
 
-Create these indexes in the Atlas UI under **Search → Create Index → JSON Editor**.
+Create this index in the Atlas UI under **Search → Create Index → JSON Editor**.
 
-### Index 1 — Plant Knowledge
-
-**Database:** `gardening_knowledge` · **Collection:** `plant_knowledge`
-**Index name:** `plant_knowledge_vector_index`
+**Database:** `gardening_knowledge` · **Collection:** `plant_health_knowledge`
+**Index name:** `plant_health_knowledge_vector_index`
 
 ```json
 {
@@ -238,31 +247,16 @@ Create these indexes in the Atlas UI under **Search → Create Index → JSON Ed
       "similarity": "cosine"
     },
     { "type": "filter", "path": "plant" },
-    { "type": "filter", "path": "season" }
+    { "type": "filter", "path": "knowledge_type" },
+    { "type": "filter", "path": "tags" }
   ]
 }
 ```
 
-### Index 2 — Disease Knowledge
+The `knowledge_type` filter lets the Query Rewriter scope retrieval precisely — for example, a photo observation query passes `knowledge_type: { $in: ["DISEASE", "PEST", "NUTRIENT_DEFICIENCY", "HEALTHY_BASELINE"] }` as a pre-filter, so only relevant records are scored by the vector model.
 
-**Database:** `gardening_knowledge` · **Collection:** `disease_knowledge`
-**Index name:** `disease_knowledge_vector_index`
+> **Note:** The vector search service includes an automatic in-memory cosine similarity fallback while the Atlas index is building, so local development never breaks.
 
-```json
-{
-  "fields": [
-    {
-      "type": "vector",
-      "path": "embedding",
-      "numDimensions": 768,
-      "similarity": "cosine"
-    },
-    { "type": "filter", "path": "plant" }
-  ]
-}
-```
-
-> **Note:** Both vector search services include an automatic in-memory cosine similarity fallback while Atlas indexes are building, so local development never breaks.
 
 ---
 
@@ -348,8 +342,9 @@ This project was built for Hacktoberfest 2026. All contributions welcome!
 5. Open a Pull Request
 
 ### Good First Issues
-- Add more plants to `data/seed_plants.json`
-- Add more diseases to `data/seed_diseases.json`
+- Add more plant records to `data/seed_knowledge.json` (use `knowledge_type: "PLANT_BASIC"`)
+- Add more disease records to `data/seed_knowledge.json` (use `knowledge_type: "DISEASE"`)
+- Add pest, nutrition, or maintenance knowledge records
 - Improve prompt quality in `src/prompts/`
 - Add unit tests for the Query Rewriter
 - Improve UI in `public/`

@@ -1,0 +1,288 @@
+[
+  {
+    "plant": "tomato",
+    "knowledge_type": "PLANT_BASIC",
+    "title": "Tomato — Overview",
+    "tags": ["tomato", "warm-season", "overview", "basics"],
+    "knowledgeText": "Tomato (Solanum lycopersicum) is a warm-season fruiting vegetable widely grown across India and tropical regions. It grows best between 18–30°C and requires full sun. Tomatoes are moderate to heavy feeders that need well-drained, fertile soil. They are among the most rewarding home garden crops, producing fruit 60–80 days after transplanting.",
+    "structuredData": {
+      "botanicalName": "Solanum lycopersicum",
+      "family": "Solanaceae",
+      "season": ["winter", "spring"],
+      "temperatureMin": 18,
+      "temperatureMax": 30,
+      "daysToHarvest": "60-80"
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "PLANTING",
+    "title": "Tomato — Planting Guide",
+    "tags": ["tomato", "planting", "seedling", "spacing", "transplant"],
+    "knowledgeText": "Start tomato seeds indoors 6–8 weeks before transplanting. Transplant seedlings when they are 15–20cm tall and all frost risk has passed. Space plants 45–60cm apart in rows 75–90cm apart. Plant deeper than they were in the nursery pot — burying part of the stem encourages stronger root development. Water immediately after planting and provide support stakes or cages.",
+    "structuredData": {
+      "seedDepth_cm": 1,
+      "spacing_cm": 50,
+      "rowSpacing_cm": 80,
+      "transplantHeight_cm": 15,
+      "directSow": false
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "SOIL",
+    "title": "Tomato — Soil Requirements",
+    "tags": ["tomato", "soil", "pH", "drainage", "compost"],
+    "knowledgeText": "Tomatoes thrive in loamy, well-draining soil rich in organic matter. The ideal soil pH is 6.0–7.0. Heavy clay soils should be amended with compost and sand to improve drainage. Before planting, dig 30cm deep and mix in well-rotted compost or manure. Avoid waterlogged conditions as they promote root rot and fungal diseases.",
+    "structuredData": {
+      "phMin": 6.0,
+      "phMax": 7.0,
+      "preferredTexture": "loamy",
+      "organicMatter": "high"
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "SUNLIGHT",
+    "title": "Tomato — Sunlight Requirements",
+    "tags": ["tomato", "sunlight", "sun", "light", "exposure"],
+    "knowledgeText": "Tomatoes require 6–8 hours of direct sunlight per day for optimal growth and fruit production. Insufficient sunlight results in leggy plants, poor flowering, and reduced fruit set. In hot climates like northern India, afternoon shade (after 3 PM) can prevent heat stress during peak summer. Position plants where they receive full morning sun.",
+    "structuredData": {
+      "minSunlightHours": 6,
+      "optimalSunlightHours": 8,
+      "afternoonShade": "beneficial in hot climates"
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "WATER",
+    "title": "Tomato — Watering Requirements",
+    "tags": ["tomato", "watering", "irrigation", "drought", "moisture"],
+    "knowledgeText": "Tomatoes need consistent, deep watering — approximately 2.5–3.5cm per week. Water at the base of the plant, not the leaves. Inconsistent watering causes blossom end rot and fruit cracking. Mulching around plants helps retain moisture and regulate soil temperature. During fruiting, reduce watering slightly to improve flavour concentration.",
+    "structuredData": {
+      "weeklyWater_cm": 3,
+      "method": "drip or base watering",
+      "mulch": "recommended",
+      "frequency": "2-3 times per week"
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "CLIMATE",
+    "title": "Tomato — Climate Suitability",
+    "tags": ["tomato", "climate", "temperature", "humidity", "India", "Gorakhpur"],
+    "knowledgeText": "Tomatoes grow well in warm, dry climates with temperatures between 18–30°C. In northern India (including cities like Gorakhpur, Lucknow, Varanasi), the best planting window is October–February, avoiding the hot summer and monsoon season. High humidity above 80% increases the risk of fungal diseases. Frost below 4°C will kill tomato plants.",
+    "structuredData": {
+      "optimalTempMin": 18,
+      "optimalTempMax": 30,
+      "regions": ["north India", "Uttar Pradesh", "Bihar"],
+      "bestSeason": ["October", "November", "December", "January"]
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "GROWTH_STAGE",
+    "title": "Tomato — Growth Stages",
+    "tags": ["tomato", "growth", "stages", "germination", "flowering", "fruiting"],
+    "knowledgeText": "Tomato growth progresses through: germination (5–10 days), seedling (2–4 weeks), vegetative (3–5 weeks with rapid leaf growth), flowering (5–7 weeks after transplant), fruiting (8–12 weeks), and ripening (12–16 weeks). Each stage has different nutrient and water requirements. Monitor plants weekly and adjust care as they move through stages.",
+    "structuredData": {
+      "stages": ["germination", "seedling", "vegetative", "flowering", "fruiting", "ripening"],
+      "germination_days": "5-10",
+      "harvest_weeks": "12-16"
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "HEALTHY_BASELINE",
+    "title": "Tomato — Healthy Plant Appearance",
+    "tags": ["tomato", "healthy", "normal", "baseline", "appearance", "leaves"],
+    "knowledgeText": "A healthy tomato plant has deep green, slightly fuzzy leaves without spots or discolouration. Stems are sturdy and upright. New growth at the growing tip should be bright green and compact. Flowers are yellow and star-shaped. Fruit set should be even. Any yellowing of lower leaves may indicate normal senescence OR nitrogen deficiency. White powdery residue, dark spots, or wilting are signs of disease or stress.",
+    "structuredData": {
+      "leafColour": "deep green",
+      "stemTexture": "sturdy, slightly hairy",
+      "flowerColour": "yellow",
+      "normalLowerLeafYellowing": true
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "DISEASE",
+    "title": "Early Blight",
+    "tags": ["early blight", "alternaria", "fungal", "leaf spots", "brown spots", "yellowing"],
+    "knowledgeText": "Early blight (Alternaria solani) is one of the most common tomato diseases in India. It appears as brown to dark brown circular spots with concentric rings (target-board pattern), usually on lower and older leaves first. Surrounding leaf tissue turns yellow. The disease spreads upward under humid, warm conditions (24–29°C). Severely infected leaves drop prematurely, reducing fruit yield.",
+    "structuredData": {
+      "pathogen": "Alternaria solani",
+      "symptoms": ["brown circular spots", "concentric ring pattern", "yellowing leaves", "leaf drop"],
+      "conditions": "warm humid weather 24-29°C",
+      "treatment": "copper-based fungicide (Bordeaux mixture), mancozeb; remove infected leaves",
+      "prevention": "crop rotation, proper spacing, avoid wetting leaves",
+      "severity": "moderate to high"
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "DISEASE",
+    "title": "Late Blight",
+    "tags": ["late blight", "phytophthora", "water-soaked", "dark lesions", "stem rot"],
+    "knowledgeText": "Late blight (Phytophthora infestans) is a devastating tomato disease causing dark, water-soaked lesions on leaves, stems, and fruit. White mouldy growth may appear on the underside of leaves in humid conditions. It spreads extremely rapidly — a field can be destroyed within days. In India, it is most severe during the monsoon or cool, wet winters.",
+    "structuredData": {
+      "pathogen": "Phytophthora infestans",
+      "symptoms": ["dark water-soaked lesions", "white mould on leaf underside", "fruit rot"],
+      "conditions": "cool wet weather, high humidity",
+      "treatment": "metalaxyl + mancozeb fungicide; remove and destroy affected plants",
+      "prevention": "resistant varieties, proper drainage, avoid overhead irrigation",
+      "severity": "very high"
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "PEST",
+    "title": "Aphids",
+    "tags": ["aphids", "pest", "insects", "green fly", "sucking pest", "sticky leaves"],
+    "knowledgeText": "Aphids are small (1–3mm), soft-bodied insects that cluster on new shoots and the underside of young leaves. They suck plant sap, causing leaf curl, distortion, and yellowing. Aphids secrete honeydew, encouraging sooty mould. They also transmit viral diseases. A strong spray of water dislodges them; neem oil or insecticidal soap are effective organic treatments.",
+    "structuredData": {
+      "type": "sucking insect",
+      "symptoms": ["leaf curl", "sticky honeydew", "yellowing", "distorted growth"],
+      "treatment": "neem oil spray, insecticidal soap, water jet",
+      "prevention": "encourage ladybirds, reflective mulch, avoid excess nitrogen"
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "NUTRIENT_DEFICIENCY",
+    "title": "Nitrogen Deficiency",
+    "tags": ["nitrogen", "deficiency", "yellowing", "pale leaves", "stunted growth"],
+    "knowledgeText": "Nitrogen deficiency in tomatoes shows as yellowing (chlorosis) starting from the oldest lower leaves and moving upward. The whole leaf turns pale yellow-green, unlike fungal diseases that produce spots. Growth slows significantly. Apply a balanced nitrogen fertiliser (urea, ammonium sulphate, or compost tea). Avoid over-application as it promotes leaf growth at the expense of fruit.",
+    "structuredData": {
+      "nutrient": "Nitrogen (N)",
+      "symptoms": ["uniform yellowing of lower leaves", "pale green overall", "slow growth"],
+      "treatment": "balanced NPK fertiliser (19:19:19) or urea at 1g/litre water",
+      "distinguishFrom": "early blight shows spots; N deficiency is uniform yellowing"
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "PREVENTION",
+    "title": "Tomato — Disease Prevention",
+    "tags": ["tomato", "prevention", "fungal", "disease", "spacing", "sanitation"],
+    "knowledgeText": "Prevent tomato diseases by spacing plants 45–60cm apart for good air circulation. Water at soil level, never overhead. Remove and dispose of infected leaves immediately. Rotate crops — do not plant tomatoes in the same soil for 2–3 years. Apply a preventive neem oil spray every 2 weeks. Keep the garden free of plant debris at the end of the season.",
+    "structuredData": {
+      "keyPractices": ["proper spacing", "drip irrigation", "crop rotation", "debris removal", "neem oil spray"],
+      "spraySchedule": "every 14 days as preventive"
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "MAINTENANCE",
+    "title": "Tomato — Ongoing Maintenance",
+    "tags": ["tomato", "maintenance", "pruning", "suckers", "staking", "fertilising"],
+    "knowledgeText": "Tomato maintenance includes removing suckers (side shoots growing between the main stem and a branch) to improve air circulation and direct energy to fruit. Stake or cage plants as they grow. Feed with a balanced fertiliser every 2–3 weeks during the growing season. Check for pests and diseases weekly. Mulch with straw or dry leaves to suppress weeds and retain moisture.",
+    "structuredData": {
+      "tasks": ["remove suckers weekly", "stake/cage plants", "fertilise every 2-3 weeks", "weekly pest inspection", "mulch"],
+      "fertilisingSchedule": "balanced NPK during growth; potassium-rich during fruiting"
+    }
+  },
+  {
+    "plant": "tomato",
+    "knowledge_type": "HARVESTING",
+    "title": "Tomato — Harvesting",
+    "tags": ["tomato", "harvesting", "ripe", "red", "picking", "yield"],
+    "knowledgeText": "Tomatoes are ready to harvest when fully coloured (red, yellow, or orange depending on variety) and slightly soft to the touch. Pick in the morning when temperatures are cool. Twist and pull gently, or cut with scissors. Do not refrigerate fresh tomatoes as cold temperatures ruin their flavour. Harvest regularly to encourage continued fruit production.",
+    "structuredData": {
+      "readinessIndicators": ["full colour", "slight give when squeezed", "easy detachment"],
+      "harvestMethod": "twist and pull or cut",
+      "storage": "room temperature, up to 1 week"
+    }
+  },
+  {
+    "plant": "chilli",
+    "knowledge_type": "PLANT_BASIC",
+    "title": "Chilli — Overview",
+    "tags": ["chilli", "capsicum", "warm-season", "spicy", "overview"],
+    "knowledgeText": "Chilli (Capsicum annuum and related species) is a warm-season crop widely grown across India for its pungent fruits. It thrives in temperatures between 20–30°C and requires full sun. Chilli plants are moderately drought-tolerant once established but need consistent moisture for good yields. They are ready to harvest 70–90 days after transplanting.",
+    "structuredData": {
+      "botanicalName": "Capsicum annuum",
+      "temperatureMin": 20,
+      "temperatureMax": 30,
+      "daysToHarvest": "70-90"
+    }
+  },
+  {
+    "plant": "chilli",
+    "knowledge_type": "PLANTING",
+    "title": "Chilli — Planting Guide",
+    "tags": ["chilli", "planting", "spacing", "seedling", "transplant"],
+    "knowledgeText": "Sow chilli seeds 1cm deep in seedling trays and transplant when they are 10–15cm tall (about 4–6 weeks after germination). Space plants 30–45cm apart in rows 60cm apart. Plant in well-prepared beds with compost. Water immediately after transplanting and protect from strong afternoon sun for the first 2–3 days.",
+    "structuredData": {
+      "seedDepth_cm": 1,
+      "spacing_cm": 40,
+      "rowSpacing_cm": 60,
+      "transplantHeight_cm": 12
+    }
+  },
+  {
+    "plant": "chilli",
+    "knowledge_type": "DISEASE",
+    "title": "Chilli Anthracnose",
+    "tags": ["chilli", "anthracnose", "fruit rot", "sunken lesions", "black spots", "fungal"],
+    "knowledgeText": "Anthracnose (Colletotrichum spp.) is a major chilli disease causing sunken, dark, circular lesions on ripening fruits. Infected fruits shrivel and dry up. The disease spreads through infected seeds and splashing rainwater. Warm humid conditions (25–30°C) promote rapid spread. Remove infected fruits immediately. Apply mancozeb or carbendazim fungicide preventively.",
+    "structuredData": {
+      "pathogen": "Colletotrichum spp.",
+      "symptoms": ["sunken dark fruit lesions", "fruit shrivelling", "black spots on ripe fruit"],
+      "treatment": "mancozeb or carbendazim, remove infected fruits",
+      "severity": "high"
+    }
+  },
+  {
+    "plant": "spinach",
+    "knowledge_type": "PLANT_BASIC",
+    "title": "Spinach — Overview",
+    "tags": ["spinach", "leafy", "cool-season", "iron", "salad", "greens"],
+    "knowledgeText": "Spinach (Spinacia oleracea) is a cool-season leafy vegetable that grows best in temperatures of 10–20°C. It is one of the fastest-growing vegetables, ready for harvest in 30–45 days. Spinach is heat-sensitive and will bolt (go to seed) quickly in hot weather. In northern India, it is best grown from October to February. It is rich in iron, vitamins, and minerals.",
+    "structuredData": {
+      "botanicalName": "Spinacia oleracea",
+      "temperatureMin": 10,
+      "temperatureMax": 20,
+      "daysToHarvest": "30-45",
+      "season": ["winter"]
+    }
+  },
+  {
+    "plant": "spinach",
+    "knowledge_type": "PLANTING",
+    "title": "Spinach — Planting Guide",
+    "tags": ["spinach", "planting", "direct sow", "spacing", "seeds"],
+    "knowledgeText": "Sow spinach seeds directly 1–2cm deep in well-prepared soil. Space seeds 5–8cm apart in rows 30cm apart. Spinach does not transplant well and should be direct-sown. Keep soil consistently moist until germination (5–10 days). Thin seedlings to 10–15cm apart once they have 2 true leaves. Successive sowing every 2–3 weeks extends the harvest period.",
+    "structuredData": {
+      "seedDepth_cm": 1.5,
+      "spacing_cm": 10,
+      "rowSpacing_cm": 30,
+      "directSow": true,
+      "germinationDays": "5-10"
+    }
+  },
+  {
+    "plant": "general",
+    "knowledge_type": "SOIL",
+    "title": "Good Garden Soil — Characteristics",
+    "tags": ["soil", "loamy", "drainage", "compost", "organic matter", "general"],
+    "knowledgeText": "Good garden soil is loamy — a balanced mix of sand, silt, and clay — allowing water to drain while retaining enough moisture for roots. It should be dark in colour, rich in organic matter, and teeming with earthworms. To improve poor soil: add compost, leaf mould, or well-rotted manure. Till to 30cm depth before planting. A soil pH between 6.0–7.0 suits most vegetables.",
+    "structuredData": {
+      "idealPh": "6.0-7.0",
+      "improvements": ["compost", "leaf mould", "manure"],
+      "tillingDepth_cm": 30
+    }
+  },
+  {
+    "plant": "general",
+    "knowledge_type": "ENVIRONMENTAL_STRESS",
+    "title": "Heat Stress in Plants",
+    "tags": ["heat stress", "wilting", "scorching", "temperature", "summer", "environmental"],
+    "knowledgeText": "Heat stress occurs when temperatures exceed 35°C, causing plants to wilt, drop flowers, and reduce fruit set. Leaves may show scorching (brown crispy edges) or cupping. Water plants early in the morning. Apply thick mulch (5–8cm) to keep roots cool. Erect shade cloth (30–50% shade) during peak summer hours. Avoid fertilising stressed plants as it increases their water demand.",
+    "structuredData": {
+      "triggerTemperature_C": 35,
+      "symptoms": ["wilting", "flower drop", "leaf scorch", "reduced fruiting"],
+      "remedies": ["morning watering", "mulching", "shade cloth", "no fertiliser during stress"]
+    }
+  }
+]

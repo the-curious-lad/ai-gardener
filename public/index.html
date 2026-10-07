@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Gardener — Touch Grass</title>
+  <link rel="stylesheet" href="/styles.css?v=7" />
+</head>
+<body>
+  <!-- Lightweight Login / Sign Up Overlay (No Email Verification) -->
+  <div id="authOverlay" class="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <span class="logo">🌱</span>
+        <h2>AI Gardener</h2>
+        <p class="muted">Sign in or create an account to manage your personal gardens.</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button type="button" id="tabLoginBtn" class="auth-tab active">Log In</button>
+        <button type="button" id="tabSignupBtn" class="auth-tab">Sign Up</button>
+      </div>
+
+      <form id="authForm" class="auth-form">
+        <div class="auth-field">
+          <label for="authUsername">Username</label>
+          <input
+            type="text"
+            id="authUsername"
+            placeholder="Enter your username"
+            required
+            autocomplete="username"
+          />
+        </div>
+        <div class="auth-field">
+          <label for="authPassword">Password</label>
+          <input
+            type="password"
+            id="authPassword"
+            placeholder="Enter your password (min 4 chars)"
+            required
+            autocomplete="current-password"
+          />
+        </div>
+        <div id="authError" class="auth-error hidden"></div>
+        <button type="submit" id="authSubmitBtn" class="btn btn-primary btn-full">
+          Log In
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🌱</span>
+      <div>
+        <h1>AI Gardener</h1>
+        <p class="muted subtitle">Spend 30 seconds here. Spend the rest outside.</p>
+      </div>
+    </div>
+    <div class="session-controls">
+      <span id="userBadge" class="badge">👤 Guest</span>
+      <span id="gardenCountBadge" class="badge">1 / 3 Gardens</span>
+      <span id="phaseBadge" class="badge phase-badge">PLANTING</span>
+      <button id="newSessionBtn" class="btn btn-secondary" title="Start a new garden chat">+ New Garden</button>
+      <button id="logoutBtn" class="btn btn-secondary btn-sm" title="Log out of current account">Log Out</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Far-Left Column: Up to 3 Garden Chats Selector -->
+    <aside class="panel gardens-sidebar">
+      <div class="sidebar-header">
+        <h3>🌿 My Gardens</h3>
+        <span class="muted" id="sidebarLimitText">Max 3</span>
+      </div>
+      <ul id="gardenList" class="garden-list">
+        <!-- Populated dynamically with up to 3 garden cards -->
+      </ul>
+      <button id="sidebarNewGardenBtn" class="btn btn-secondary btn-full">
+        + Add Garden
+      </button>
+    </aside>
+
+    <!-- Middle Column: Multi-Garden Outdoor Action Card + Selected Chat Plan View -->
+    <section class="panel action-panel">
+      <div class="action-card" id="topActionCard">
+        <div class="action-header">
+          <span class="eyebrow">GO OUTSIDE · TODAY'S NEXT ACTIONS</span>
+          <span id="topTaskSchedule" class="schedule-tag">1 Garden</span>
+        </div>
+        <div id="multiActionContainer" class="multi-action-list">
+          <!-- Populated dynamically with 1, 2, or 3 next actions (one per active garden) -->
+        </div>
+      </div>
+
+      <!-- Selected Garden Context Summary Pills -->
+      <div class="context-bar" id="contextBar">
+        <span class="ctx-pill" id="ctxLocation">📍 Location: —</span>
+        <span class="ctx-pill" id="ctxLand">📐 Area: —</span>
+        <span class="ctx-pill" id="ctxSun">☀️ Sunlight: —</span>
+        <span class="ctx-pill" id="ctxSeason">🌦️ Season: —</span>
+        <span class="ctx-pill" id="ctxPlants">🌿 Plants: —</span>
+      </div>
+
+      <!-- Selected Chat Current Plan & Tasks -->
+      <div class="plan-card">
+        <div class="plan-header">
+          <h3 id="planCardTitle">Current Plan & Tasks</h3>
+          <span id="planDuration" class="muted">No active plan yet</span>
+        </div>
+        <p id="planSummary" class="plan-summary muted">
+          Complete the quick context check in chat to generate your personalized plan.
+        </p>
+        <ul id="taskList" class="task-list">
+          <li class="empty-state">No new activity or tasks scheduled yet for this garden.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Right Column: Selected Garden Chat + Photo Upload + Pipeline Inspector -->
+    <section class="panel chat-panel">
+      <div class="chat-header-bar">
+        <span id="activeChatTitle" class="chat-active-title">💬 Garden #1</span>
+        <span id="activeChatSubtitle" class="muted">Active Chat</span>
+      </div>
+      <div id="chatMessages" class="chat-messages">
+        <div class="msg assistant">
+          <div class="bubble">
+            Welcome! Tell me what you'd like to grow and where your garden is located — or upload a photo of a plant you're observing.
+          </div>
+        </div>
+      </div>
+
+      <form id="chatForm" class="chat-form">
+        <div id="photoPreviewBar" class="photo-preview hidden">
+          <span id="photoFileName">📷 photo.jpg</span>
+          <button type="button" id="clearPhotoBtn" class="clear-photo">✕</button>
+        </div>
+        <div class="input-row">
+          <label for="photoInput" class="btn btn-icon" title="Upload a plant photo">
+            📷
+            <input type="file" id="photoInput" accept="image/*" hidden />
+          </label>
+          <input
+            type="text"
+            id="messageInput"
+            placeholder="Enter your query here"
+            autocomplete="off"
+          />
+          <button type="submit" id="sendBtn" class="btn btn-primary">Send</button>
+        </div>
+      </form>
+
+      <!-- Collapsible Pipeline Telemetry (Helpful for Judges & Debugging) -->
+      <details class="inspector">
+        <summary>🔍 Pipeline Inspector (Router · Vector Search · Vision Observation)</summary>
+        <pre id="inspectorOutput">Waiting for first interaction...</pre>
+      </details>
+    </section>
+  </main>
+
+  <script src="/app.js?v=7"></script>
+</body>
+</html>
