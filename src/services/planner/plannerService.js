@@ -74,18 +74,25 @@ function buildFallbackPlan(updatedContext = {}, startDay = 1, currentPhase = 'PL
           scheduledFor: `Day ${startDay + 1}`,
         },
         {
+          title: `Thin crowded ${plantRaw} shoots and check stem support`,
+          description: `Ensure healthy airflow between ${plantRaw} plants across your ${area} bed and add soft stakes or ties if stems are leaning.`,
+          phase: 'GROWING',
+          status: 'PENDING',
+          scheduledFor: `Day ${startDay + 2}`,
+        },
+        {
           title: `Weed around root zone and refresh mulch`,
           description: `Hand-pull competing weeds around your ${plantRaw} plants and top up organic mulch to buffer ${city}'s ${season} temperatures.`,
           phase: 'MAINTENANCE',
           status: 'PENDING',
-          scheduledFor: `Day ${startDay + 2}`,
+          scheduledFor: `Day ${startDay + 3}`,
         },
         {
           title: `Top-dress with organic compost or vermicompost`,
           description: `Scratch a light handful of vermicompost into the topsoil 5 cm away from each ${plantRaw} stem and water in lightly.`,
           phase: 'MAINTENANCE',
           status: 'PENDING',
-          scheduledFor: `Day ${startDay + 3}`,
+          scheduledFor: `Day ${startDay + 4}`,
         },
       ];
 
@@ -173,11 +180,46 @@ async function runPlanner({
     };
   }
 
-  // If the 4B model returned 0 tasks, populate with grounded fallback tasks
-  if (!Array.isArray(planOutput.tasks) || planOutput.tasks.length === 0) {
-    logger.warn('[Planner] LLM returned 0 tasks — populating grounded fallback tasks.');
-    planOutput.tasks = fallback.tasks;
+  // Never regress phase to PLANTING when replanning on Day > 1
+  if (startDay > 1 && (!planOutput.updatedPhase || planOutput.updatedPhase === 'PLANTING')) {
+    planOutput.updatedPhase = startDay >= 10 ? 'MAINTENANCE' : 'GROWING';
   }
+
+  // Deduplicate tasks and filter out already-completed tasks when replanning on Day > 1
+  const completedTitleSet = new Set(
+    (session.tasks ?? [])
+      .filter((t) => t.status === 'COMPLETED')
+      .map((t) => String(t.title || '').trim().toLowerCase())
+      .filter(Boolean)
+  );
+  const seenTitles = new Set();
+  const uniqueTasks = [];
+
+  for (const t of planOutput.tasks ?? []) {
+    const normTitle = String(t.title || '').trim().toLowerCase();
+    if (!normTitle || seenTitles.has(normTitle)) continue;
+    if (startDay > 1 && completedTitleSet.has(normTitle)) continue;
+    seenTitles.add(normTitle);
+    uniqueTasks.push(t);
+  }
+
+  // If the 4B model returned 0 tasks, populate with grounded fallback tasks
+  if (uniqueTasks.length === 0) {
+    logger.warn('[Planner] LLM returned 0 unique tasks — populating grounded fallback tasks.');
+    uniqueTasks.push(...fallback.tasks);
+  } else if (startDay > 1 && uniqueTasks.length < 4) {
+    // On Day > 1 replans, top up to at least 4 distinct GROWING/MAINTENANCE tasks if the LLM returned too few
+    for (const fb of fallback.tasks) {
+      if (uniqueTasks.length >= 4) break;
+      const normFb = fb.title.trim().toLowerCase();
+      if (!seenTitles.has(normFb) && !completedTitleSet.has(normFb)) {
+        seenTitles.add(normFb);
+        uniqueTasks.push(fb);
+      }
+    }
+  }
+
+  planOutput.tasks = uniqueTasks;
 
   if (
     !planOutput.currentPlan?.summary ||
@@ -194,26 +236,21 @@ async function runPlanner({
     planOutput.summary = fallback.chatSummary;
   }
 
-  // Extract first day number from the first task to check if the 4B model reset to Day 1
-  const firstSched = String(planOutput.tasks?.[0]?.scheduledFor || '');
-  const firstNumMatch = firstSched.match(/\d+/);
-  const firstTaskDay = firstNumMatch ? parseInt(firstNumMatch[0], 10) : null;
-  const dayOffset =
-    startDay > 1 && firstTaskDay != null && firstTaskDay < startDay
-      ? startDay - firstTaskDay
-      : 0;
-
-  // Assign stable unique taskIds and enforce sequential Day X+1 numbering
+  // Deterministically assign strict sequential Day numbers (Day startDay, Day startDay+1, ...)
+  // and ensure tasks on Day > 1 never regress to PLANTING phase.
   planOutput.tasks = (planOutput.tasks ?? []).map((t, idx) => {
-    let scheduledFor = t.scheduledFor || `Day ${startDay + idx}`;
-    if (dayOffset > 0 && /\d+/.test(scheduledFor)) {
-      scheduledFor = scheduledFor.replace(/\d+/g, (m) => String(parseInt(m, 10) + dayOffset));
-    } else if (startDay > 1 && !/day\s*\d+/i.test(scheduledFor)) {
-      scheduledFor = `Day ${startDay + idx}`;
-    }
+    const scheduledFor = `Day ${startDay + idx}`;
+    const taskPhase =
+      startDay > 1 && (!t.phase || t.phase === 'PLANTING')
+        ? idx >= 2
+          ? 'MAINTENANCE'
+          : 'GROWING'
+        : t.phase || 'PLANTING';
 
     return {
       ...t,
+      phase: taskPhase,
+      status: t.status === 'COMPLETED' ? 'COMPLETED' : 'PENDING',
       scheduledFor,
       taskId:
         t.taskId && t.taskId.startsWith('task_')

@@ -733,10 +733,19 @@ async function handleTaskCompletion({ sessionId, taskId, triggerReplan = false }
   let retrievedClimateKnowledge = [];
 
   if (triggerReplan || pendingCount === 0) {
+    // Advance phase when initial planting batch is finished so the LLM generates GROWING/MAINTENANCE tasks
+    const prevPhase = session.gardenState?.currentPhase ?? 'PLANTING';
+    const nextPhaseHint =
+      prevPhase === 'PLANTING'
+        ? 'GROWING'
+        : nextStartDay >= 10
+          ? 'MAINTENANCE'
+          : prevPhase;
+
     // All tasks up to Day X are completed -> call LLM Planner to generate Day X+1 tasks
     retrievedKnowledge = primaryPlant
       ? await searchKnowledge({
-          semanticQuery: `${primaryPlant} ${session.gardenState?.currentPhase ?? 'GROWING'} maintenance next steps Day ${nextStartDay}`,
+          semanticQuery: `${primaryPlant} ${nextPhaseHint} maintenance next steps Day ${nextStartDay}`,
           knowledgeTypes: ['GROWTH_STAGE', 'MAINTENANCE', 'WATER', 'PREVENTION'],
           plantFilter: primaryPlant,
           limit: 4,
@@ -758,6 +767,7 @@ async function handleTaskCompletion({ sessionId, taskId, triggerReplan = false }
       tasks,
       gardenState: {
         ...(session.gardenState ?? {}),
+        currentPhase: nextPhaseHint,
         currentDay: nextStartDay,
       },
     };

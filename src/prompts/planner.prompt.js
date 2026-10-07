@@ -48,13 +48,15 @@ MAINTENANCE — irrigation, pruning, fertilisation, disease prevention, ongoing 
 - Keep task titles short (max 8 words). Descriptions: 2–3 sentences.
 - Use retrieved plant_health_knowledge for spacing, depth, soil pH, watering, and disease/pest management.
 - Use retrieved climate_location_knowledge to tailor tasks to regional temperature, rainfall, humidity, frost risk, heat risk, and seasonal planting windows (note: if frost_risk or heat_risk is UNKNOWN, do not assume it is low).
-- Spread tasks across sequential days starting from the current Garden Day (e.g., if Garden Day is Day 1, use "Day 1", "Day 2", etc.; if Garden Day is Day 5 after completing Day 1–4, use "Day 5", "Day 6", "Day 7", etc. NEVER reset back to "Day 1" when advancing an existing garden).
+- Spread tasks across strictly sequential days starting from the current Garden Day: Task 1 = "Day <N>", Task 2 = "Day <N+1>", Task 3 = "Day <N+2>", Task 4 = "Day <N+3>", Task 5 = "Day <N+4>". NEVER assign two tasks to the same Day number, and NEVER reset back to "Day 1" when Garden Day > 1.
+- When Garden Day > 1 (replanning after initial tasks are completed), transition phase to GROWING or MAINTENANCE and generate ONLY next-stage care tasks (e.g., seedling thinning, staking/pruning, pest/disease inspection, deep root-zone watering, organic top-dressing). NEVER repeat completed soil preparation, bed clearing, or initial planting tasks.
 - If a photo observation shows disease or pests, add an immediate inspection/treatment task on the current Garden Day as top priority.
 
 ## WHAT YOU MUST NOT DO (STRICT GUARDRAILS)
 
 - DO NOT generate plans or tasks for anything unrelated to gardening, plant care, or the user's specified preferredPlants and location.
 - DO NOT include indoor, digital, or screen-time tasks (e.g., "Research online", "Watch a video", "Buy a book"). Every task must be a physical action in the garden.
+- DO NOT assign the same "Day X" value to multiple tasks, and DO NOT repeat any task already listed under COMPLETED / PREVIOUS TASKS.
 - DO NOT reset scheduledFor back to "Day 1" when Garden Day is greater than 1.
 - DO NOT ignore User Preferences (for example, if the user prefers organic methods, never suggest synthetic chemical pesticides or fertilizers).
 - DO NOT invent fake agro-climatic facts or assume low frost/heat risk when climate records mark risk as UNKNOWN.
@@ -72,7 +74,15 @@ Respond with ONLY valid JSON. No explanation, no markdown.
       "description": "What to do. Where. How. 2-3 sentences.",
       "phase": "PLANTING" | "GROWING" | "MAINTENANCE",
       "status": "PENDING",
-      "scheduledFor": "Day <current_garden_day>"
+      "scheduledFor": "Day <N>"
+    },
+    {
+      "taskId": "task_002",
+      "title": "Next day action title",
+      "description": "What to do. Where. How. 2-3 sentences.",
+      "phase": "GROWING" | "MAINTENANCE",
+      "status": "PENDING",
+      "scheduledFor": "Day <N+1>"
     }
   ],
   "currentPlan": {
@@ -196,7 +206,7 @@ ${contextLines}
 COMPACT CONTEXT SUMMARY:
 ${compactSummary}
 
-EXISTING TASKS:
+COMPLETED / PREVIOUS TASKS (DO NOT REPEAT THESE STEPS):
 ${taskSummary}
 
 RECENT MESSAGES (last ${history.length}):
@@ -208,7 +218,7 @@ ${knowledgeSummary}
 RETRIEVED CLIMATE & LOCATION KNOWLEDGE:
 ${climateSummary}
 ${photoSection}
-Generate the garden plan now.`;
+Generate 5 NEW sequential tasks starting strictly on Day ${gardenDay}, Day ${gardenDay + 1}, Day ${gardenDay + 2}, Day ${gardenDay + 3}, and Day ${gardenDay + 4} (one unique task per day, no duplicate day numbers, and do not repeat completed tasks).`;
 }
 
 module.exports = { SYSTEM_PROMPT, buildPlannerPrompt };
