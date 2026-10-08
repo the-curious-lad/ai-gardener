@@ -179,10 +179,11 @@ function extractDeterministicSignals(text = '') {
     out.land = { area: val, unit };
   }
 
-  // 2. Sunlight hours (e.g. "3 hours of sunlight", "6 hours of direct sun", "6 hrs sun", "6h sunlight")
+  // 2. Sunlight hours (e.g. "3 hours of sunlight", "6 hours of direct sun", "6 hrs sun", "6h sunlight", or standalone "12 hours")
   const sunMatch =
     msg.match(/\b(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h)\b[^.?!]*?\b(?:sunlight|sun|light)\b/i) ||
-    msg.match(/\b(?:sunlight|sun)\b[^.?!]*?\b(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h)\b/i);
+    msg.match(/\b(?:sunlight|sun)\b[^.?!]*?\b(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h)\b/i) ||
+    msg.match(/^\s*(?:around\s+|about\s+|roughly\s+)?(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h)\s*(?:daily|per\s+day|a\s+day)?\s*$/i);
   if (sunMatch) {
     out.sunlightHours = parseFloat(sunMatch[1]);
   }

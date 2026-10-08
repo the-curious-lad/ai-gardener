@@ -162,13 +162,33 @@ async function searchKnowledge({ semanticQuery, knowledgeTypes = [], plantFilter
   }
 
   try {
-    const results = await repo.vectorSearchPipeline(
+    let results = await repo.vectorSearchPipeline(
       queryVector,
       knowledgeTypes,
       plantFilter,
       limit,
       INDEX_NAME
     );
+    // If narrow knowledgeTypes pre-filter matched 0 docs in Atlas, retry with plantFilter only
+    if (results.length === 0 && knowledgeTypes?.length) {
+      results = await repo.vectorSearchPipeline(
+        queryVector,
+        [],
+        plantFilter,
+        limit,
+        INDEX_NAME
+      );
+    }
+    // If specific plant (e.g. "sunflower") has 0 exact-plant docs, retry semantic vector search across general crops
+    if (results.length === 0 && plantFilter) {
+      results = await repo.vectorSearchPipeline(
+        queryVector,
+        [],
+        null,
+        limit,
+        INDEX_NAME
+      );
+    }
     if (results.length > 0) {
       logger.debug(`[VectorSearch] Atlas returned ${results.length} results`);
       return results;

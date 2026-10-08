@@ -96,7 +96,7 @@ async function findAllWithEmbeddings(knowledgeTypes = null, plantFilter = null) 
   const query = { embedding: { $exists: true, $ne: [] } };
   if (knowledgeTypes?.length) query.knowledge_type = { $in: knowledgeTypes };
   if (plantFilter) query.plant = plantFilter.toLowerCase();
-  return col().find(query).toArray();
+  return col().find(query).limit(200).toArray();
 }
 
 /**

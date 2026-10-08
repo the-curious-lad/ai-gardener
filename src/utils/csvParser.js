@@ -10,67 +10,75 @@ const path = require('path');
  * @param {string} content Raw CSV string
  * @returns {object[]} Array of row objects keyed by header names
  */
+function unquoteField(raw) {
+  let s = raw;
+  if (s.length >= 2 && s.charCodeAt(0) === 34 && s.charCodeAt(s.length - 1) === 34) {
+    s = s.slice(1, -1);
+    if (s.includes('""')) {
+      s = s.replace(/""/g, '"');
+    }
+  }
+  return s.trim();
+}
+
 function parseCSV(content) {
   const rows = [];
   let currentRow = [];
-  let currentField = '';
+  let fieldStart = 0;
   let inQuotes = false;
+  const len = content.length;
 
-  for (let i = 0; i < content.length; i++) {
-    const ch = content[i];
-    const next = content[i + 1];
+  for (let i = 0; i < len; i++) {
+    const code = content.charCodeAt(i);
 
     if (inQuotes) {
-      if (ch === '"' && next === '"') {
-        currentField += '"';
-        i++; // skip escaped quote
-      } else if (ch === '"') {
-        inQuotes = false;
-      } else {
-        currentField += ch;
+      if (code === 34) {
+        if (content.charCodeAt(i + 1) === 34) {
+          i++; // skip escaped quote
+        } else {
+          inQuotes = false;
+        }
       }
     } else {
-      if (ch === '"') {
+      if (code === 34 && i === fieldStart) {
         inQuotes = true;
-      } else if (ch === ',') {
-        currentRow.push(currentField);
-        currentField = '';
-      } else if (ch === '\r' && next === '\n') {
-        currentRow.push(currentField);
-        rows.push(currentRow);
+      } else if (code === 44) {
+        currentRow.push(unquoteField(content.slice(fieldStart, i)));
+        fieldStart = i + 1;
+      } else if (code === 13 || code === 10) {
+        currentRow.push(unquoteField(content.slice(fieldStart, i)));
+        if (currentRow.length > 1 || currentRow[0] !== '') {
+          rows.push(currentRow);
+        }
         currentRow = [];
-        currentField = '';
-        i++; // skip \n
-      } else if (ch === '\n' || ch === '\r') {
-        currentRow.push(currentField);
-        rows.push(currentRow);
-        currentRow = [];
-        currentField = '';
-      } else {
-        currentField += ch;
+        if (code === 13 && content.charCodeAt(i + 1) === 10) {
+          i++; // skip \n
+        }
+        fieldStart = i + 1;
       }
     }
   }
 
-  if (currentField.length > 0 || currentRow.length > 0) {
-    currentRow.push(currentField);
-    rows.push(currentRow);
+  if (fieldStart < len || currentRow.length > 0) {
+    currentRow.push(unquoteField(content.slice(fieldStart, len)));
+    if (currentRow.length > 1 || currentRow[0] !== '') {
+      rows.push(currentRow);
+    }
   }
 
   if (rows.length === 0) return [];
 
   const headers = rows[0].map((h) => h.trim());
-  const records = [];
+  const records = new Array(rows.length - 1);
 
   for (let r = 1; r < rows.length; r++) {
     const row = rows[r];
-    if (row.length === 1 && row[0].trim() === '') continue;
-
     const obj = {};
     for (let c = 0; c < headers.length; c++) {
-      obj[headers[c]] = (row[c] ?? '').trim();
+      // Flatten string reference so the original 9.2MB content buffer can be garbage-collected
+      obj[headers[c]] = Buffer.from(row[c] ?? '', 'utf8').toString('utf8');
     }
-    records.push(obj);
+    records[r - 1] = obj;
   }
 
   return records;
