@@ -34,10 +34,10 @@ You spend 30 seconds telling it about your garden. It gives you one clear task f
 
 | Category | How We Qualify |
 |---|---|
-| 🏆 **Overall** | Genuinely useful open-source project with real-world impact |
-| 🍃 **MongoDB Atlas** | Dual-database design + unified `plant_health_knowledge` collection with a single Atlas Vector Search index; `knowledge_type` filters replace separate collections |
-| 🤖 **Gemma** | Gemma 3 4B (via Ollama) used for both text reasoning and multimodal photo analysis |
-| ☁️ **Render** | Single-click deploy via `render.yaml`; no cloud AI APIs required |
+| 🏆 **Overall (Touch Grass)** | Spend 30 seconds on the screen, spend the rest outside — built on open-weight `gemma3:4b` and `nomic-embed-text` |
+| 🍃 **MongoDB Atlas** | 4 collections (`garden_sessions`, `users`, `plant_health_knowledge` with 2,174 records, `climate_location_knowledge` with 70 records) + 768-dim Atlas Vector Search |
+| 🤖 **Gemma** | Gemma 3 4B (via Ollama) for structured JSON routing/planning and multimodal leaf photo diagnosis |
+| ☁️ **Render** | Deployed live at `https://ai-gardener.onrender.com` with 512 MB RAM optimization (371 MB -> 114 MB) & NDJSON streaming |
 
 > Every technology in this stack has a genuine functional role — nothing was added for prize hunting.
 
