@@ -236,6 +236,26 @@ async function runPlanner({
     planOutput.summary = fallback.chatSummary;
   }
 
+  // Guardrail 5: Low-sunlight warning when planning sun-loving crops with < 4 hours/day of direct sunlight
+  const FULL_SUN_PLANTS = new Set([
+    'tomato', 'sunflower', 'pepper', 'chilli', 'capsicum', 'eggplant', 'okra',
+    'cucumber', 'watermelon', 'melon', 'pumpkin', 'squash', 'zucchini',
+    'hibiscus', 'rose', 'marigold', 'bougainvillea', 'sweet corn', 'potato',
+  ]);
+  const sunHours = updatedContext?.sunlightHours;
+  const fullSunCrop = (updatedContext?.preferredPlants ?? []).find((p) =>
+    FULL_SUN_PLANTS.has(String(p || '').toLowerCase().trim())
+  );
+  if (
+    sunHours != null &&
+    sunHours < 4 &&
+    fullSunCrop &&
+    !planOutput.summary.includes('Sunlight Heads-Up')
+  ) {
+    const cropCap = fullSunCrop.charAt(0).toUpperCase() + fullSunCrop.slice(1);
+    planOutput.summary = `⚠️ Sunlight Heads-Up: ${cropCap} is a sun-loving crop that typically requires 6+ hours of direct daily sunlight for strong flowering and yield. With ${sunHours}h/day of sunlight, place your plants in the brightest south- or west-facing spot available (or use movable containers) and avoid overwatering.\n\n${planOutput.summary}`;
+  }
+
   // Deterministically assign strict sequential Day numbers (Day startDay, Day startDay+1, ...)
   // and ensure tasks on Day > 1 never regress to PLANTING phase.
   planOutput.tasks = (planOutput.tasks ?? []).map((t, idx) => {

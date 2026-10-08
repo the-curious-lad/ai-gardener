@@ -82,7 +82,7 @@ async function uploadPhoto(req, res) {
       return res.status(400).json({ error: 'photo file is required (multipart field: "photo").' });
     }
 
-    const userNote = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+    const userNote = typeof req.body?.message === 'string' ? req.body.message.trim().slice(0, 600) : '';
 
     const result = await handlePhotoUpload({
       sessionId: req.params.sessionId,
