@@ -286,12 +286,6 @@ function renderChatForActiveGarden() {
       );
     });
   }
-
-  if (entry.lastInspector) {
-    inspectorOutput.textContent = JSON.stringify(entry.lastInspector, null, 2);
-  } else {
-    inspectorOutput.textContent = 'Waiting for interaction in this garden...';
-  }
 }
 
 function renderSidebarGardens() {
