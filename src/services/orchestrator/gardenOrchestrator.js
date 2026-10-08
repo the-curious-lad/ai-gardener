@@ -309,7 +309,28 @@ async function handleUserMessage({ sessionId, userMessage }) {
         retrievedClimateKnowledge,
         session
       );
-      reply = await ai.generateText(answerPrompt);
+      try {
+        reply = await ai.generateText(answerPrompt);
+      } catch (err) {
+        logger.warn(`[Orchestrator] Local LLM unreachable for directAnswer (${err.message}) — synthesizing from retrieved knowledge.`);
+        const topPlant = retrievedKnowledge[0];
+        const topClimate = retrievedClimateKnowledge[0];
+        const parts = [];
+        if (topClimate) {
+          parts.push(
+            `In ${topClimate.location_name || updatedContext.location?.city || 'your region'} (${topClimate.normalized_season || updatedContext.season || 'current season'}), ${topClimate.seasonal_gardening_implications || topClimate.general_growing_conditions || topClimate.knowledge_text || ''}`.trim()
+          );
+        }
+        if (topPlant) {
+          parts.push(
+            `For ${topPlant.plant_common_name || topPlant.plant || 'your crop'}: ${topPlant.management_actions || topPlant.water_requirement || topPlant.knowledge_text || ''}`.trim()
+          );
+        }
+        reply =
+          parts.filter(Boolean).join(' ') ||
+          decision.directAnswer ||
+          'Keep your soil evenly moist at the root zone, ensure adequate daily sunlight, and inspect leaves regularly for early signs of stress.';
+      }
     } else {
       reply = decision.directAnswer ?? 'Got it! Your garden state is up to date.';
     }

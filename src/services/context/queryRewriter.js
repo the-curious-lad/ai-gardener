@@ -716,12 +716,51 @@ async function runQueryRewriter(session, userMessage) {
   const userPrompt = buildUserPrompt(session, userMessage);
 
   logger.debug('[QueryRewriter] calling Gemma...');
-  const decision = await ai.generateStructuredOutput(
-    SYSTEM_PROMPT,
-    userPrompt,
-    RouterDecisionSchema
-  );
-  logger.debug('[QueryRewriter] raw decision:', JSON.stringify(decision, null, 2));
+  let decision;
+  try {
+    decision = await ai.generateStructuredOutput(
+      SYSTEM_PROMPT,
+      userPrompt,
+      RouterDecisionSchema
+    );
+    logger.debug('[QueryRewriter] raw decision:', JSON.stringify(decision, null, 2));
+  } catch (err) {
+    logger.warn(`[QueryRewriter] Local LLM unreachable (${err.message}) — using deterministic router fallback.`);
+    const isQuestion = /\?|\b(how|what|when|why|which|can i|should i)\b/i.test(userMessage);
+    const fallbackIntent = hasExistingPlan
+      ? isQuestion
+        ? 'ASK_QUESTION'
+        : 'UPDATE_PLAN'
+      : isQuestion && Object.keys(deterministicSignals).length === 0
+        ? 'ASK_QUESTION'
+        : 'CREATE_GARDEN_PLAN';
+    const primaryPlant =
+      deterministicSignals.preferredPlants?.[0] || existingContext.preferredPlants?.[0] || null;
+    decision = RouterDecisionSchema.parse({
+      status: 'READY',
+      intent: fallbackIntent,
+      normalizedQuery: userMessage.trim(),
+      extractedContext: deterministicSignals,
+      missingRequiredContext: [],
+      requiredKnowledgeSources: ['PLANT_HEALTH', 'CLIMATE_LOCATION'],
+      requiredTools: fallbackIntent === 'ASK_QUESTION' ? [] : ['PLANNER'],
+      needsKnowledge: true,
+      knowledgeQuery: {
+        semanticQuery: `${primaryPlant || ''} ${userMessage}`.trim(),
+        knowledgeTypes: ['HEALTHY_BASELINE', 'GROWTH_STAGE', 'MAINTENANCE', 'PREVENTION'],
+        plantFilter: primaryPlant,
+      },
+      needsClimateKnowledge: Boolean(
+        deterministicSignals.location?.city || existingContext.location?.city
+      ),
+      climateQuery: null,
+      needsSessionContext: false,
+      needsPhotoAnalysis: false,
+      needsPlanner: fallbackIntent !== 'ASK_QUESTION',
+      clarificationQuestion: null,
+      directAnswer: null,
+    });
+  }
 
   // Post-LLM out-of-scope guardrail (if LLM classified a borderline query as OUT_OF_SCOPE)
   if (decision.intent === 'OUT_OF_SCOPE') {

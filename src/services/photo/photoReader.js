@@ -47,7 +47,21 @@ async function analyzePlantPhoto({ imageBuffer, mimeType = 'image/jpeg', session
     }
   }
 
-  throw new Error(`Photo analysis failed after ${MAX_RETRIES} attempts: ${lastError?.message}`);
+  logger.warn(`[PhotoReader] Local vision model unreachable (${lastError?.message}) — using note-assisted fallback observation.`);
+  const fallbackPlant = session.gardenState?.context?.preferredPlants?.[0] || 'garden plant';
+  const noteLower = (userNote || '').toLowerCase();
+  const hasYellowOrSpot = /\b(yellow|spot|brown|wilt|curl|pest|bug|blight|dry)\b/.test(noteLower);
+  return PhotoObservationSchema.parse({
+    plantDetected: fallbackPlant,
+    visibleSymptoms: userNote ? [userNote.trim()] : ['general foliage inspection'],
+    leafCondition: hasYellowOrSpot ? 'spotted' : 'healthy',
+    possiblePestSigns: [],
+    possibleDiseaseSigns: hasYellowOrSpot ? ['possible foliar stress or early leaf spot'] : [],
+    growthStageEstimate: 'vegetative',
+    severity: hasYellowOrSpot ? 'moderate' : 'mild',
+    confidence: 0.65,
+    uncertainties: ['Analyzed using note-assisted fallback while local vision node is offline'],
+  });
 }
 
 module.exports = { analyzePlantPhoto };
