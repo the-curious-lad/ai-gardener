@@ -870,7 +870,7 @@ function markTaskDone(targetSessionId, taskId, triggerReplan = false) {
         ...(entry.session.conversationHistory || []),
         {
           role: 'assistant',
-          content: `Error: ${err.message}`,
+          content: 'Something went wrong while processing your request. Please click Retry below to try again.',
           timestamp: new Date().toISOString(),
           retryPayload: {
             type: 'task',
@@ -1050,7 +1050,7 @@ async function sendChatMessage(text, file = null, targetSessionOverride = null) 
       ...(entry.session.conversationHistory || []),
       {
         role: 'assistant',
-        content: `Error: ${err.message}`,
+        content: 'Something went wrong while processing your request. Please click Retry below to try again.',
         timestamp: new Date().toISOString(),
         retryPayload: text
           ? {
